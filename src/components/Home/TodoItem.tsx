@@ -1,7 +1,13 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import React from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '../../utils/constants/color';
+import CheckBox from '@react-native-community/checkbox';
 
 export interface Item {
   userId: number;
@@ -16,26 +22,32 @@ interface ITodoItem {
   item: Item;
   onToggleComplete: (id: number) => void;
   deleteTodo: (id: number) => void;
-  handleEditForm: (item: Item) => void
+  handleEditForm: (item: Item) => void;
 }
 
 const formatDate = (dateInput: string) => {
   const date = new Date(dateInput);
 
-  return (
-    date?.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  );
+  return date?.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true   
+  });
 };
 
 const TodoItem = React.memo(
   ({ item, onToggleComplete, deleteTodo, handleEditForm }: ITodoItem) => {
     return (
-      <View style={styles.todoCard}>
+      <View
+        style={[
+          styles.todoCard,
+          item?.completed
+            ? { borderLeftColor: 'green' }
+            : { borderLeftColor: 'grey' },
+        ]}
+      >
         <View style={styles.todoHeader}>
-          <View style={{maxWidth: '70%'}}>
+          <View style={{ maxWidth: '70%' }}>
             <Text
               style={[
                 styles.todoTitle,
@@ -49,31 +61,33 @@ const TodoItem = React.memo(
             </Text>
           </View>
           <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => onToggleComplete(item.id)}
-            activeOpacity={0.7}
-          >
-            {!item.completed && <Icon name='done-outline' color={'green'} size={20}/> }
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleEditForm(item)}
+              activeOpacity={0.7}
+            >
+              <Icon name="mode-edit" color={'grey'} size={20} />
+            </TouchableOpacity>
 
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleEditForm(item)}
-            activeOpacity={0.7}
-          >
-            <Icon name='mode-edit' color={'grey'} size={20}/>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => deleteTodo(item.id)}
-            activeOpacity={0.7}
-          >
-            <Icon name='delete-forever' color={'red'} size={20}/>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => deleteTodo(item.id)}
+              activeOpacity={0.7}
+            >
+              <Icon name="delete-forever" color={'red'} size={20} />
+            </TouchableOpacity>
+            <CheckBox
+              tintColors={{
+                true: '#4cd137',
+                false: '#222',
+              }}
+              boxType="circle"
+              value={item?.completed}
+              onValueChange={() => {
+                onToggleComplete(item.id);
+              }}
+            />
+          </View>
         </View>
 
         {/* Timestamps */}
@@ -100,13 +114,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderLeftWidth: 7,
   },
   todoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
     flex: 1,
-    width:'100%'
+    width: '100%',
   },
 
   todoTitle: {
@@ -127,7 +142,7 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     marginLeft: 'auto',
-    gap: 10
+    gap: 10,
   },
   actionButton: {
     justifyContent: 'center',

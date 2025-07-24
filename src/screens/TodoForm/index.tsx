@@ -24,7 +24,16 @@ const TodoForm: React.FC<TodoFormScreenProps> = ({navigation, route}) => {
 
       dispatch(editTodo(newTodo));
       setTodoText('');
-      Alert.alert('Success', 'Task Edited successfully!');
+       Alert.alert(
+        'Success',
+        'Task Edited successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
     } catch (error) {
       Alert.alert('Error', 'Failed to add task item. Please try again.');
     }
@@ -42,8 +51,17 @@ const TodoForm: React.FC<TodoFormScreenProps> = ({navigation, route}) => {
       dispatch(addTodo(newTodo));
 
       setTodoText('');
-      Alert.alert('Success', 'Task item added successfully!');
-    
+      Alert.alert(
+        'Success',
+        'Task Added successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
+      
   };
 
   return (

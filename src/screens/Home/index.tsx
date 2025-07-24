@@ -3,7 +3,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Button,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,18 +12,19 @@ import Loading from '../../components/global/Loading';
 import AddTodoBtn from '../../components/Home/AddTodoBtn';
 import TodoItem, { type Item } from '../../components/Home/TodoItem';
 import { HomeScreenProps } from '../../navigation/types';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { colors } from '../../utils/constants/color';
+import { deleteTodo } from '../../store/todo/todoSlice';
 
 const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [todosData, setTodosData] = useState<any>([]);
   const { isLoading } = useGetTodosQuery();
   const todos = useSelector((state: RootState) => state.todo.data);
-  const [sortBy, setSortBy] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('recent');
   const [filterBy, setFilterBy] = useState<'all' | 'active' | 'done'>('all');
-
+  const dispatch = useDispatch()
   const totalTodos = todosData.length;
   const completedTodos = useMemo(
     () => todosData.filter((todo: Item) => todo?.completed)?.length,
@@ -32,9 +32,7 @@ const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
   );
 
   useEffect(() => {
-    if (todos?.length > 0) {
       setTodosData(todos);
-    }
   }, [todos]);
 
   const onToggleComplete = useCallback((id: number) => {
@@ -52,11 +50,10 @@ const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, []);
 
   // delete Todo
-  const deleteTodo = useCallback((id: number) => {
-    setTodosData((prevTodos: Item[]) =>
-      prevTodos.filter(todo => todo.id !== id),
-    );
-  }, []);
+  const deleteTodoItem = (id: number) => {
+    const filteredList =  [...todosData].filter((todo: Item) => todo.id === id)
+    dispatch(deleteTodo(filteredList[0]?.id))
+  };
 
   // Edit todo
   const handleEditForm = useCallback((item: Item) => {
@@ -79,6 +76,12 @@ const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
+    if (sortBy === 'oldest') {
+      filtered = [...filtered].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    }
     return filtered;
   };
 
@@ -88,7 +91,7 @@ const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
   }
   
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, marginBottom: insets.bottom }]}>
 
       <Text style={styles.header}>Today Task</Text>
       <Text style={{ textAlign: 'center', paddingVertical: 5 }}>
@@ -116,8 +119,8 @@ const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
     {/* Todo Lists */}
       <FlatList
         ListHeaderComponent={() => (
-          <TouchableOpacity onPress={() => setSortBy('recent')} style={styles.sortBtn}>
-            <Text style={{color: colors.white}}>Sort By Latest first</Text>
+          <TouchableOpacity onPress={() => sortBy === 'recent' ? setSortBy('oldest') : setSortBy('recent')} style={styles.sortBtn}>
+            <Text style={{color: colors.white}}>{sortBy === 'recent' ? 'Sort By Oldest first' : 'Sort By Latest first'}</Text>
           </TouchableOpacity>
         )}
         data={filteredAndSortedTodos()}
@@ -126,7 +129,7 @@ const Home: React.FC<HomeScreenProps> = ({ navigation }) => {
           <TodoItem
             item={item}
             onToggleComplete={onToggleComplete}
-            deleteTodo={deleteTodo}
+            deleteTodo={deleteTodoItem}
             handleEditForm={handleEditForm}
           />
         )}
